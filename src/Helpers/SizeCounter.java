@@ -20,11 +20,11 @@
  */
 package Helpers;
 
-import Helpers.DFUDSString;
-import Helpers.TrieNode;
-
 public class SizeCounter {
     public static int Count(TrieNode root, boolean withDelta) {
+        if (root == null)
+            return 0;
+
         final int[] size = {0};
 
         size[0] += CountSingle(root, withDelta);
@@ -36,6 +36,9 @@ public class SizeCounter {
     }
 
     public static int CountSingle(TrieNode node, boolean withDelta) {
+        if (node == null)
+            return 0;
+
         int size = 0;
 
         // count self
@@ -49,6 +52,9 @@ public class SizeCounter {
     }
 
     public static int CountSynonym(TrieNode root, boolean withDelta) {
+        if (root == null)
+            return 0;
+
         final int[] size = {0};
 
         if (root.score == 0) {
@@ -62,6 +68,9 @@ public class SizeCounter {
     }
 
     public static int CountDict(TrieNode root) {
+        if (root == null)
+            return 0;
+
         if (root.score == 0)
             return 0;
 
@@ -76,6 +85,9 @@ public class SizeCounter {
     }
 
     public static int CountNode(TrieNode root) {
+        if (root == null)
+            return 0;
+
         final int[] size = {0};
 
         // count self
@@ -89,6 +101,9 @@ public class SizeCounter {
     }
 
     public static int CountRelation(TrieNode root) {
+        if (root == null)
+            return 0;
+
         final int[] size = {0};
 
         // count self
@@ -102,6 +117,9 @@ public class SizeCounter {
     }
 
     public static int CountLink(TrieNode root) {
+        if (root == null)
+            return 0;
+
         final int[] size = {0};
 
         // count self
@@ -109,42 +127,6 @@ public class SizeCounter {
 
         // count children
         root.children.values().forEach(c -> size[0] += CountLink(c));
-
-        return size[0];
-    }
-
-    public static int Count(DFUDSString dfuds) {
-        final int[] size = {0};
-
-        size[0] += dfuds.Parenthesis.length() / 8;
-        size[0] += dfuds.Labels.length();
-        size[0] += dfuds.Ranks.length * 4;
-
-        dfuds.Links.forEach(l -> size[0] += l.size() * 4 * 2);
-
-        return size[0];
-    }
-
-    public static int CountNode(DFUDSString dfuds) {
-        final int[] size = {0};
-
-        size[0] += dfuds.Parenthesis.length() / 8;
-        size[0] += dfuds.Labels.length();
-        size[0] += dfuds.Ranks.length * 4;
-
-        return size[0];
-    }
-
-    public static int CountRelation(DFUDSString dfuds) {
-        final int[] size = {0};
-
-        return size[0];
-    }
-
-    public static int CountLink(DFUDSString dfuds) {
-        final int[] size = {0};
-
-        dfuds.Links.forEach(l -> size[0] += l.size() * 4 * 2);
 
         return size[0];
     }

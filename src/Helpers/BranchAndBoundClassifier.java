@@ -38,6 +38,16 @@ public class BranchAndBoundClassifier {
         this.capacity = capacity;
     }
 
+    private static int longestPrefix(String a, String b) {
+        int minLength = Math.min(a.length(), b.length());
+        for (int i = 0; i < minLength; i++) {
+            if (a.charAt(i) != b.charAt(i)) {
+                return i;
+            }
+        }
+        return minLength;
+    }
+
     public void prepare() {
 
         // prepare BABItems
@@ -66,10 +76,117 @@ public class BranchAndBoundClassifier {
         Collections.sort(items, BABItem.byRatioMin());
     }
 
+    /**
+     * @return Quartet(value, weight, items_taken, items_not_taken)
+     */
+    public Quartet solve() {
+
+        Node best = new Node();
+        Node root = new Node();
+        root.computeLowerBound();
+        root.computeUpperBound();
+
+        PriorityQueue<Node> q = new PriorityQueue<Node>();
+        q.offer(root);
+
+        int visited = 0;
+
+        while (!q.isEmpty()) {
+            Node node = q.poll();
+
+            if (node.ubound > best.value && node.h < items.size() - 1) {
+
+                Node with = new Node(node);
+                BABItem item = items.get(node.h);
+                with.weight += getRealWeight(item, with.taken);
+
+                if (with.weight <= capacity) {
+
+                    with.taken.add(node.h);
+                    with.value += item.value;
+                    with.computeLowerBound();
+                    with.computeUpperBound();
+
+                    if (with.lbound > best.lbound) {
+                        best = with;
+                    }
+                    if (with.ubound >= best.lbound) {
+                        visited++;
+                        q.offer(with);
+                    }
+
+                    Node without = new Node(node);
+                    without.computeLowerBound();
+                    without.computeUpperBound();
+
+                    if (without.ubound >= best.lbound) {
+                        visited++;
+                        q.offer(without);
+                    }
+                }
+            }
+        }
+        //System.out.println(visited);
+
+        // if BnB terminates early than h levels, we know this best.lbound is the best solution
+        best.takeLowerBoundNaive();
+
+        // BABItem -> Rule
+        List<Rule> takenn = new ArrayList<>();
+        List<Rule> notTakenn = new ArrayList<>();
+        best.taken.forEach(i -> takenn.add(items.get(i).rule));
+
+        for (int i = 0; i < items.size(); i++) {
+            if (!best.taken.contains(i))
+                notTakenn.add(items.get(i).rule);
+        }
+
+        return new Quartet<>((int) best.value, (int) best.weight, takenn, notTakenn);
+    }
+
+    private int getRealWeight(BABItem item, List<Integer> taken) {
+        List<Rule> takenn = new ArrayList<>();
+        taken.forEach(i -> {
+            BABItem t = items.get(i);
+            //if (t.rule.lhs.equals(item.rule.lhs))
+            takenn.add(t.rule);
+        });
+        takenn.add(item.rule);
+
+        //return item.weight;
+        //return FakeApply.applyInSequence(root, dict, takenn, item.rule, false);
+        return getWeightMin(item, takenn);
+    }
+
+    private int getWeight(BABItem item) {
+        Rule real = item.rule;
+
+        // compare self lhs and rhs
+        int max = longestPrefix(real.lhs, real.rhs);
+
+        return (real.rhs.length() - max) * item.value * (1 + 4 + 4 + 4);
+    }
+
+    private int getWeightMin(BABItem item, List<Rule> rules) {
+        Rule real = item.rule;
+        int max = longestPrefix(real.lhs, real.rhs);
+
+        for (Rule rule : rules) {
+            if (rule == real)
+                continue;
+
+            int len = longestPrefix(rule.rhs, real.rhs);
+            if (len > max)
+                max = len;
+        }
+
+        return (real.rhs.length() - max) * item.value * (1 + 4 + 4 + 4);
+    }
+
     private class Node implements Comparable<Node> {
 
-        private int h;
         List<Integer> taken;
+        private int h;
         private double lbound;
         private double ubound;
         private double value;
@@ -170,123 +287,6 @@ public class BranchAndBoundClassifier {
 
             return lbound;
         }
-    }
-
-    /**
-     * @return Quartet(value, weight, items_taken, items_not_taken)
-     */
-    public Quartet solve() {
-
-        Node best = new Node();
-        Node root = new Node();
-        root.computeLowerBound();
-        root.computeUpperBound();
-
-        PriorityQueue<Node> q = new PriorityQueue<Node>();
-        q.offer(root);
-
-        int visited = 0;
-
-        while (!q.isEmpty()) {
-            Node node = q.poll();
-
-            if (node.ubound > best.value && node.h < items.size() - 1) {
-
-                Node with = new Node(node);
-                BABItem item = items.get(node.h);
-                with.weight += getRealWeight(item, with.taken);
-
-                if (with.weight <= capacity) {
-
-                    with.taken.add(node.h);
-                    with.value += item.value;
-                    with.computeLowerBound();
-                    with.computeUpperBound();
-
-                    if (with.lbound > best.lbound) {
-                        best = with;
-                    }
-                    if (with.ubound >= best.lbound) {
-                        visited++;
-                        q.offer(with);
-                    }
-
-                    Node without = new Node(node);
-                    without.computeLowerBound();
-                    without.computeUpperBound();
-
-                    if (without.ubound >= best.lbound) {
-                        visited++;
-                        q.offer(without);
-                    }
-                }
-            }
-        }
-        System.out.println(visited);
-
-        // if BnB terminates early than h levels, we know this best.lbound is the best solution
-        best.takeLowerBoundNaive();
-
-        // BABItem -> Rule
-        List<Rule> takenn = new ArrayList<>();
-        List<Rule> notTakenn = new ArrayList<>();
-        best.taken.forEach(i -> takenn.add(items.get(i).rule));
-
-        for (int i = 0; i < items.size(); i++) {
-            if (!best.taken.contains(i))
-                notTakenn.add(items.get(i).rule);
-        }
-
-        return new Quartet<>((int) best.value, (int) best.weight, takenn, notTakenn);
-    }
-
-    private int getRealWeight(BABItem item, List<Integer> taken) {
-        List<Rule> takenn = new ArrayList<>();
-        taken.forEach(i -> {
-            BABItem t = items.get(i);
-            //if (t.rule.lhs.equals(item.rule.lhs))
-            takenn.add(t.rule);
-        });
-        takenn.add(item.rule);
-
-        //return item.weight;
-        //return FakeApply.applyInSequence(root, dict, takenn, item.rule, false);
-        return getWeightMin(item, takenn);
-    }
-
-    private int getWeight(BABItem item) {
-        Rule real = item.rule;
-
-        // compare self lhs and rhs
-        int max = longestPrefix(real.lhs, real.rhs);
-
-        return (real.rhs.length() - max) * item.value * (1 + 4 + 4 + 4);
-    }
-
-    private int getWeightMin(BABItem item, List<Rule> rules) {
-        Rule real = item.rule;
-        int max = longestPrefix(real.lhs, real.rhs);
-
-        for (Rule rule : rules) {
-            if (rule == real)
-                continue;
-
-            int len = longestPrefix(rule.rhs, real.rhs);
-            if (len > max)
-                max = len;
-        }
-
-        return (real.rhs.length() - max) * item.value * (1 + 4 + 4 + 4);
-    }
-
-    private static int longestPrefix(String a, String b) {
-        int minLength = Math.min(a.length(), b.length());
-        for (int i = 0; i < minLength; i++) {
-            if (a.charAt(i) != b.charAt(i)) {
-                return i;
-            }
-        }
-        return minLength;
     }
 
 }
