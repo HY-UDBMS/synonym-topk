@@ -27,7 +27,7 @@ import java.util.*;
 
 public class TopK_HT {
     public static String[] GetTopK(String prefix, TrieNode root_d, TrieNode root_r, int k) {
-        List<String> result = new ArrayList<>(k);
+        LinkedHashSet<String> result = new LinkedHashSet<>(k);
 
         //HashMap<from, List<to>>
         HashMap<TrieNode, HashSet<TrieNode>> used_links = new HashMap<>();
@@ -58,8 +58,7 @@ public class TopK_HT {
                 if (last.IsLeaf() && !last.IsLinkNode()) {
                     String full = last.GetFullString(false);
 
-                    if (!result.contains(full))
-                        result.add(full);
+                    result.add(full);
 
                     if (result.size() == k)
                         return result.toArray(new String[result.size()]);

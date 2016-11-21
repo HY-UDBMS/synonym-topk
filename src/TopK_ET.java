@@ -25,12 +25,13 @@ import org.javatuples.Triplet;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.PriorityQueue;
 
 public class TopK_ET {
 
     public static String[] GetTopK(String prefix, TrieNode root, int k) {
-        HashSet<String> result = new HashSet<>(k);
+        LinkedHashSet<String> result = new LinkedHashSet<>(k);
 
         //HashMap<from, List<to>>
         HashMap<TrieNode, HashSet<TrieNode>> used_links = new HashMap<>();

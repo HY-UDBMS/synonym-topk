@@ -24,12 +24,13 @@ import Helpers.TrieNodePairComparator;
 import javafx.util.Pair;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.PriorityQueue;
 
 public class TopK_TT {
     public static String[] GetTopK(String prefix, TrieNode root_d, TrieNode root_r, int k) {
-        List<String> result = new ArrayList<>(k);
+        LinkedHashSet<String> result = new LinkedHashSet<>(k);
 
         // Pair<TrieNode, remaining_index_in_prefix>
         PriorityQueue<Pair<TrieNode, Integer>> queue = new PriorityQueue<>(new TrieNodePairComparator());
@@ -57,8 +58,7 @@ public class TopK_TT {
                 if (last.IsLeaf() && !last.IsLinkNode()) {
                     String full = last.GetFullString(false);
 
-                    if (!result.contains(full))
-                        result.add(full);
+                    result.add(full);
 
                     if (result.size() == k)
                         return result.toArray(new String[result.size()]);
