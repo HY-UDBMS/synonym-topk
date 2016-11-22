@@ -19,6 +19,7 @@
  * SOFTWARE.
  */
 
+import Helpers.ArgsReader;
 import Helpers.Rule;
 import Helpers.SizeCounter;
 import Helpers.TrieNode;
@@ -34,41 +35,27 @@ import java.util.List;
 public class Program {
     public static void main(String[] args) {
 
-        String rule_file_path;
-        String dict_file_path;
         String search_string;
-        int K = 10;
-        String build = "ET";
-        int budget = 0;
+        int K;
+        String dict_file_path;
+        String rule_file_path;
+
+        String build;
+        int budget;
 
         try {
-            dict_file_path = args[0];
-            rule_file_path = args[1];
-            search_string = args[2];
+            if (args.length == 0)
+                throw new Exception();
 
-            if (args.length > 3) {
-                K = Integer.parseInt(args[3]);
-            }
+            ArgsReader reader = new ArgsReader(args);
 
-            if (args.length > 4) {
-                switch (args[4]) {
-                    case "TT":
-                    case "ET":
-                        build = args[4];
-                        break;
+            search_string = reader.ReadNext("");
+            K = reader.ReadNext(10);
+            dict_file_path = reader.ReadNext("dict.txt");
+            rule_file_path = reader.ReadNext("rule.txt");
 
-                    case "HT":
-                        if (args.length < 6)
-                            throw new Exception();
-
-                        build = args[4];
-                        budget = Integer.parseInt(args[5]);
-                        break;
-
-                    default:
-                        throw new Exception();
-                }
-            }
+            build = reader.ReadNext("ET");
+            budget = reader.ReadNext(100000);
 
         } catch (Exception e) {
             System.out.println("This is the Semantic Top-k Auto-Completion Tool");
@@ -76,20 +63,19 @@ public class Program {
             System.out.println("For more Information, please visit http://udbms.cs.helsinki.fi/");
             System.out.println("");
             System.out.println("");
-            System.out.println("Usage: topk DICT_FILE SYNONYM_FILE SEARCH_STRING [K] [TRIE] [HT_BUDGET]");
+            System.out.println("Usage: topk SEARCH_STRING [K] [DICT_FILE] [SYNONYM_FILE] [TRIE] [(TRIE=HT) BUDGET]");
             System.out.println("");
             System.out.println("Perform top-[K] auto-completions for SEARCH_STRING with [TRIE] structure,");
             System.out.println("the results are from DICT_FILE in respect of synonyms in SYNONYM_FILE.");
             System.out.println("");
-            System.out.println("  DICT_FILE     List of dictionary strings with scores.");
-            System.out.println("  SYNONYM_FILE  List of synonym rules.");
             System.out.println("  SEARCH_STRING The search string.");
-            System.out.println("  K             The maximum number of results returned. 10 is the default value.");
-            System.out.println("  TRIE          The trie structure used in this search. Can be any of TT, ET or HT.");
-            System.out.println("                ET will be used if not specified. If you choose HT, you must specify");
-            System.out.println("                a integer as [HT_BUDGET]");
-            System.out.println("  HT_BUDGET     The space budget can be occupied by HT.");
-            System.out.println("                The value should be equal or greater then 0.");
+            System.out.println("  K             Default=10. The maximum number of results returned.");
+            System.out.println("  DICT_FILE     Default=\"dict.txt\". List of dictionary strings with scores.");
+            System.out.println("  SYNONYM_FILE  Default=\"rule.txt\". List of synonym rules.");
+            System.out.println("  TRIE          Default=\"ET\". The trie structure used in this search.");
+            System.out.println("                Can be TT, ET or HT. If you choose HT, you may want to specify BUDGET.");
+            System.out.println("  BUDGET        Default=100000. A number indicates the additional space (in bytes)");
+            System.out.println("                budget can be occupied by HT.");
 
             return;
         }
