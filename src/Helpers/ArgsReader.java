@@ -21,26 +21,49 @@
 
 package Helpers;
 
+import java.util.ArrayList;
+import java.util.Dictionary;
+import java.util.HashMap;
+import java.util.List;
+
 public class ArgsReader {
 
-    String[] args = {};
-    int len = 0;
-    int pos = 0;
+    private HashMap<String, List<String>> arg_list = new HashMap<>();
 
     public ArgsReader(String[] args) {
-        this.args = args;
-        len = args.length;
-        pos = 0;
+        Parse(args);
     }
 
-    public String ReadNext(String error) {
-        if (pos >= len)
-            return error;
+    private void Parse(String[] args) {
+        int i = 0;
 
-        return args[pos++];
+        String key = "";
+
+        while (i < args.length) {
+            String crt = args[i];
+
+            if (crt.charAt(0) == '-') {
+                key = crt.substring(1, crt.length());
+            } else {
+                if (arg_list.containsKey(key))
+                    arg_list.get(key).add(crt);
+                else {
+                    ArrayList<String> e = new ArrayList<>();
+                    e.add(crt);
+
+                    arg_list.put(key, e);
+                }
+            }
+
+            i++;
+        }
     }
 
-    public int ReadNext(int error) {
-        return Integer.parseInt(ReadNext(String.format("%d", error)));
+    public String Get(String key, int i, String def) {
+        try {
+            return arg_list.get(key).get(i);
+        } catch (Exception e) {
+            return def;
+        }
     }
 }

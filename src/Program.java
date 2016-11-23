@@ -45,37 +45,54 @@ public class Program {
 
         try {
             if (args.length == 0)
-                throw new Exception();
+                throw new Exception("");
 
             ArgsReader reader = new ArgsReader(args);
 
-            search_string = reader.ReadNext("");
-            K = reader.ReadNext(10);
-            dict_file_path = reader.ReadNext("dict.txt");
-            rule_file_path = reader.ReadNext("rule.txt");
+            search_string = reader.Get("", 0, "");
+            K = Integer.parseInt(reader.Get("", 1, "10"));
+            dict_file_path = reader.Get("d", 0, "dict.txt");
+            rule_file_path = reader.Get("s", 0, "rule.txt");
 
-            build = reader.ReadNext("ET");
-            budget = reader.ReadNext(100000);
+            build = reader.Get("t", 0, "ET");
+            budget = Integer.parseInt(reader.Get("b", 0, "5000"));
+
+            if (!(build.equals("ET") || build.equals("TT") || build.equals("HT")))
+                throw new Exception("TRIE should be one of TT, ET and HT.");
 
         } catch (Exception e) {
             System.out.println("This is the Semantic Top-k Auto-Completion Tool");
             System.out.println("Developed by Pengfei Xu @ UDBMS Group @ University of Helsinki");
             System.out.println("For more Information, please visit http://udbms.cs.helsinki.fi/");
             System.out.println("");
+            System.out.println("Usage: topk SEARCH_STRING [K] [OPTION]");
             System.out.println("");
-            System.out.println("Usage: topk SEARCH_STRING [K] [DICT_FILE] [SYNONYM_FILE] [TRIE] [(TRIE=HT) BUDGET]");
+            System.out.println("Perform top-[K] auto-completions for SEARCH_STRING using [TRIE] structure,");
+            System.out.println("the results are from DICT_FILE in respect of synonyms in SYN_FILE.");
             System.out.println("");
-            System.out.println("Perform top-[K] auto-completions for SEARCH_STRING with [TRIE] structure,");
-            System.out.println("the results are from DICT_FILE in respect of synonyms in SYNONYM_FILE.");
-            System.out.println("");
+            System.out.println("Common arguments:");
             System.out.println("  SEARCH_STRING The search string.");
-            System.out.println("  K             Default=10. The maximum number of results returned.");
-            System.out.println("  DICT_FILE     Default=\"dict.txt\". List of dictionary strings with scores.");
-            System.out.println("  SYNONYM_FILE  Default=\"rule.txt\". List of synonym rules.");
-            System.out.println("  TRIE          Default=\"ET\". The trie structure used in this search.");
-            System.out.println("                Can be TT, ET or HT. If you choose HT, you may want to specify BUDGET.");
-            System.out.println("  BUDGET        Default=100000. A number indicates the additional space (in bytes)");
+            System.out.println("  K             Default 10. The maximum number of results returned.");
+            System.out.println("");
+            System.out.println("Available options:");
+            System.out.println("  -d DICT_FILE  Default \"dict.txt\". List of dictionary strings with scores.");
+            System.out.println("  -s SYN_FILE   Default \"rule.txt\". List of synonym rules.");
+            System.out.println("  -t TRIE       Default \"ET\". The TRIE structure used in this search.");
+            System.out.println("                Can be ET, ET or HT. If you choose HT, you may want to specify BUDGET.");
+            System.out.println("  -b BUDGET     Default 5000. A number indicates the additional space (in bytes)");
             System.out.println("                budget can be occupied by HT.");
+            System.out.println("");
+            System.out.println("Examples:");
+            System.out.println("  topk \"Intl. Con\"");
+            System.out.println("  topk \"Intl. Con\" 5");
+            System.out.println("  topk \"Intl. Con\" 5 -d dict.txt -s rule.txt -t TT");
+            System.out.println("  topk \"Intl. Con\" 5 -t TT -b 5000");
+            System.out.println("");
+
+            if (!e.getMessage().equals("")) {
+                System.out.println("");
+                System.out.println(e.toString());
+            }
 
             return;
         }
@@ -106,7 +123,7 @@ public class Program {
                 rules.add(new Rule(line.split("\t")[0], line.split("\t")[1]));
             }
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.println(e.toString());
 
             return;
         }
