@@ -42,7 +42,8 @@ public class TopK_ET {
         TrieNode[] locuses = root.FindMuchByString(prefix);
 
         if (locuses == null || locuses.length == 0)
-            root.children.values().forEach(c -> queue.add(new Triplet<>(c, 0, 1)));
+            return new String[0];
+            //root.children.values().forEach(c -> queue.add(new Triplet<>(c, 0, 1)));
         else {
             // we only push the 1st element
             TrieNode locus = locuses[locuses.length - 1];
